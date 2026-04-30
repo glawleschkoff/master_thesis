@@ -1,13 +1,26 @@
-Let me start the story like this: I strongly believe that Active Inference is the perfect match for thermodynamic hardware – both together could enable efficient intelligent reasoning directly in hardware.
+# 🧠 Active Inference & Thermodynamic Hardware
 
-As is widely accepted, traditional computing hardware is not very well suited for AI workloads. AI is all about handling probabilities and uncertainties. Strikingly, usual digital chips are designed to prevent stochastic behavior – i.e., noise. Then, we do something not so smart – we use exactly these kinds of chips to simulate stochasticity, i.e., AI workloads. On extension, this consumes enormous amounts of energy, just because the chip is not well suited for the workload. 
+🚀 **[Live Demonstration: Active Inference Agent](https://active-inference-demonstration.streamlit.app)**
 
-A really profound remedy for this issue might come from thermodynamic chip designs that rather embrace stochasticity instead of fighting it. These designs seem to offer the building blocks to allow for intelligent processing directly in hardware. Still, it appears to be somewhat undecided how to assemble these building blocks in a way that supports the emergence of "intelligence".
+I strongly believe that **Active Inference is the perfect match for thermodynamic hardware** – together, they can enable efficient, intelligent reasoning directly at the physical level.
 
-"Intelligence" per se is sometimes a rather vague expression. My understanding of it is as follows: Something is able to perceive, plan, act, and learn to resist chaotic environmental influences (entropy) and thus survives. It achieves this, because it understands how the environment works (it has a generative model) and uses this information to either adapt or act on the environment to receive less harmful observations.
+## ⚠️ The Problem: Simulating Stochasticity
+Traditional computing hardware is not well suited for AI workloads. AI is fundamentally about handling probabilities and uncertainties. However, standard digital chips are explicitly designed to *prevent* stochastic behavior (noise). We then waste enormous amounts of energy using these deterministic chips to artificially *simulate* the stochasticity needed for AI workloads.
 
-This little definition is exactly where the Free Energy Principle and its algorithmic perspective Active Inference comes into play. It frames perception, planning, action, and learning as a unified inference process based on free energy minimization thereby handling arbitrary uncertainties where they occur.
+## 💡 The Remedy: Embracing Physics
+A profound solution lies in **thermodynamic chip designs** that embrace stochasticity instead of fighting it. While these designs offer the physical building blocks for intelligence, the question remains: *How do we assemble them to support the emergence of true "intelligence"?*
 
-An Active Inference model is usually expressed via factor graphs that support local belief propagation via message passing. This exact graphical structure that supports local computations might be THE blueprint for thermodynamic chip designs. Equivallently to how Active Inference agents minimize their free energy, the dynamics within the chip could just relax towards a stable state. This physical relaxation process implements the unified inference process on which all intelligent mechanisms are based on. Please see my little demonstration of an Active Infernce agent based on a factor graph to understand how perception, planning, and action all arises from a unified free energy minimization process: https://active-inference-demonstration.streamlit.app.
+*(My understanding of intelligence: An entity capable of perceiving, planning, acting, and learning to resist chaotic environmental influences (entropy) by using a generative model to understand and adapt to its environment).*
 
-(The development of certain Active Inference agents is part of my Masterthesis in Computational Neuroscience – please see the branch "thesis_wip" for all related code.)
+This is exactly where the **Free Energy Principle** and its algorithmic perspective, **Active Inference**, come into play. It frames all these mechanisms as a unified inference process based on Free Energy minimization.
+
+## 🏗️ The Blueprint: Factor Graphs
+An Active Inference model is usually expressed via **factor graphs** that support local belief propagation via message passing. This exact graphical structure that supports local computations might be *the* blueprint for thermodynamic chip designs:
+* Equivalently to how Active Inference agents minimize their Free Energy, the dynamics within the chip can simply relax towards a stable energy state.
+* This physical relaxation process natively implements the unified inference process on which all intelligent mechanisms are based.
+
+## 🎮 About the Dashboard
+Please see my [interactive demonstration](https://active-inference-demonstration.streamlit.app) of an Active Inference agent based on a factor graph to experience how perception, planning, and action all arise from a unified Free Energy minimization process.
+
+---
+> **Note:** The development of these Active Inference agents is part of my Master's Thesis in Computational Neuroscience. Please switch to the `thesis-wip` branch for the full research history and all related code.
