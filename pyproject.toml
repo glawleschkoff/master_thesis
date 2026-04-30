@@ -1,0 +1,6 @@
+[project]
+name = "master_thesis_utils"
+version = "0.1"
+
+[tool.setuptools]
+packages = ["src"]
