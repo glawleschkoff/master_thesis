@@ -6,7 +6,7 @@ np.set_printoptions(
     suppress=True        # Verhindert die wissenschaftliche Notation (z.B. 1e-05 wird zu 0.000)
 )
 
-class Agent:
+class GFEAgent:
     def __init__(self, A, B, C, D, U, time_horizon):
         self.A = A
         self.B = B
@@ -23,23 +23,12 @@ class Agent:
         self.number_actions = B.shape[2]
         self.state_beliefs = np.ones((self.time_horizon, self.number_states)) * (1 / self.number_states)
         self.observation_beliefs = np.ones((self.time_horizon, self.number_observations)) * (1 / self.number_observations)
-        self.action_beliefs = np.ones((self.time_horizon - 1, B.shape[2])) * (1 / B.shape[2])
+        self.action_beliefs = np.ones((self.time_horizon - 1, self.number_actions)) * (1 / self.number_actions)
+        self.A_beliefs = np.ones((self.time_horizon, self.number_observations, self.number_states))  * (1 / self.number_observations)
+        self.B_beliefs = np.ones((self.time_horizon - 1, self.number_states, self.number_states, self.number_actions)) * (1 / self.number_states)
 
 
-    def free_energy(self, rightward_state_messages, upward_state_messages, downward_action_messages, upward_action_messages, leftward_state_messages):
-        # joint beliefs
-        A_beliefs = np.zeros((self.time_horizon, self.number_observations, self.number_states))
-        B_beliefs = np.zeros((self.time_horizon - 1, self.number_states, self.number_states, self.number_actions))
-        for k in range(self.time_horizon):
-            A_beliefs[k, :, :] = np.einsum('i,j->ij', self.observation_beliefs[k], self.state_beliefs[k])
-        for k in range(self.time_horizon - 1):
-            if k == self.time_horizon - 2:
-                belief = np.einsum('ijk,j,j,k,i->ijk', self.B, rightward_state_messages[k], upward_state_messages[k], downward_action_messages[k], upward_state_messages[k + 1])
-                B_beliefs[k, :, :, :] = belief / np.sum(belief)
-            else:
-                belief = np.einsum('ijk,j,j,k,i,i->ijk', self.B, rightward_state_messages[k], upward_state_messages[k], downward_action_messages[k], upward_state_messages[k + 1], leftward_state_messages[k + 1])
-                B_beliefs[k, :, :, :] = belief / np.sum(belief)
-        
+    def free_energy(self):
         # energies
         D_energy = np.array([-np.einsum('i,i', self.state_beliefs[0], safelog(self.D))])
         A_energies = np.zeros(self.time_horizon)
@@ -47,10 +36,10 @@ class Agent:
         C_energies = np.zeros(self.time_horizon)
         U_energies = np.zeros(self.time_horizon - 1)
         for k in range(self.time_horizon):
-            A_energies[k] = -np.einsum('ij,ij', A_beliefs[k], safelog(self.A))
+            A_energies[k] = -np.einsum('ij,ij', self.A_beliefs[k], safelog(self.A))
             C_energies[k] = -np.einsum('i,i', self.observation_beliefs[k], safelog(self.C))
         for k in range(self.time_horizon - 1):
-            B_energies[k] = -np.einsum('ijk,ijk', B_beliefs[k], safelog(self.B))
+            B_energies[k] = -np.einsum('ijk,ijk', self.B_beliefs[k], safelog(self.B))
             U_energies[k] = -np.einsum('i,i', self.action_beliefs[k], safelog(self.U))
 
         # entropies
@@ -62,10 +51,10 @@ class Agent:
         for k in range(self.time_horizon):
             state_entropies[k] = -np.einsum('i,i', self.state_beliefs[k], safelog(self.state_beliefs[k]))
             observation_entropies[k] = -np.einsum('i,i', self.observation_beliefs[k], safelog(self.observation_beliefs[k]))
-            A_entropies[k] = -np.einsum('ij,ij', A_beliefs[k], safelog(A_beliefs[k]))
+            A_entropies[k] = -np.einsum('ij,ij', self.A_beliefs[k], safelog(self.A_beliefs[k]))
         for k in range(self.time_horizon - 1):
             action_entropies[k] = -np.einsum('i,i', self.action_beliefs[k], safelog(self.action_beliefs[k]))
-            B_entropies[k] = -np.einsum('ijk,ijk', B_beliefs[k], safelog(B_beliefs[k]))
+            B_entropies[k] = -np.einsum('ijk,ijk', self.B_beliefs[k], safelog(self.B_beliefs[k]))
 
         # free energies
         D_free_energy = D_energy - state_entropies[0]
@@ -80,44 +69,28 @@ class Agent:
             B_free_energies[k] = B_energies[k] - B_entropies[k]
             U_free_energies[k] = U_energies[k] - action_entropies[k]
 
-        # total free energy
-        total_free_energy = np.zeros(1)
-        total_free_energy += np.sum(A_free_energies)
-        total_free_energy += np.sum(B_free_energies)
-        total_free_energy += np.sum(C_free_energies)
-        total_free_energy += np.sum(D_free_energy)
-        total_free_energy += np.sum(U_free_energies)
-        total_free_energy += np.sum(state_entropies)
-        total_free_energy += np.sum(state_entropies[1])
-        #total_free_energy -= np.sum(action_entropies)
-        #total_free_energy -= np.sum(state_entropies)
-        #total_free_energy -= np.sum(state_entropies[:-1])
-        #total_free_energy -= np.sum(observation_entropies)
+        # total energy
+        total_energy = np.zeros(1)
+        total_energy += np.sum(D_energy)
+        total_energy += np.sum(A_energies)
+        total_energy += np.sum(B_energies)
+        total_energy += np.sum(U_energies)
+        total_energy += np.sum(C_energies)
+        
 
-        # print('A_energies: ' + str(A_energies))
-        # print('B_energies: ' + str(B_energies))
-        # print('C_energies: ' + str(C_energies))
-        # print('D_energy: ' + str(D_energy))
-        # print('U_energies: ' + str(U_energies))
-        # print()
-        # print('A_entropies: ' + str(A_entropies))
-        # print('B_entropies: ' + str(B_entropies))
-        # print('state_entropies: ' + str(state_entropies))
-        # print('observation_entropies: ' + str(observation_entropies))
-        # print('action_entropies: ' + str(action_entropies))
-        # print()
-        # print('A_free_energies: ' + str(A_free_energies))
-        # print('B_free_energies: ' + str(B_free_energies))
-        # print('C_free_energies: ' + str(C_free_energies))
-        # print('D_free_energy: ' + str(D_free_energy))
-        # print('U_free_energies: ' + str(U_free_energies))
-        # print()
-        # print('total_free_energy: ' + str(total_free_energy))
-        # print()
-        # print('-' * 40)
-        # print()
+        # total entropy
+        total_entropy = np.zeros(1)
+        total_entropy += np.sum(A_entropies)
+        total_entropy += np.sum(B_entropies)
+        total_entropy -= state_entropies[0]
+        total_entropy -= 2*state_entropies[1]
+        total_entropy -= state_entropies[2]
 
-        return total_free_energy
+        total_free_energy = total_energy - total_entropy
+
+        return (total_free_energy, total_energy, total_entropy, A_free_energies, B_free_energies, C_free_energies, D_free_energy, U_free_energies,
+                A_energies, B_energies, C_energies, D_energy, U_energies,
+                A_entropies, B_entropies, state_entropies, observation_entropies, action_entropies)
 
 
     def observe(self, observation):
@@ -127,7 +100,7 @@ class Agent:
 
 
     def infer(self):
-        tolerance = 1e-3
+        tolerance = 1e-4
         previous_free_energy = 0
         current_free_energy = float('inf')
 
@@ -156,7 +129,6 @@ class Agent:
                     upward_state_messages[k] = np.exp(np.einsum('ij,ij->j', self.A, safelog((self.A * self.C[:, np.newaxis]) / np.clip(self.observation_beliefs[k][:, np.newaxis], a_min=np.finfo(float).eps, a_max=None))))
                 if k < self.time_horizon - 1:
                     if k < self.current_action_timestep:
-                        #downward_action_messages[k] = self.action_beliefs[k]
                         downward_action_messages[k] = self.U
                     else:
                         downward_action_messages[k] = self.U
@@ -187,8 +159,8 @@ class Agent:
             for k in range(self.time_horizon - 1):
                 self.action_beliefs[k] = (downward_action_messages[k] * upward_action_messages[k]) / np.sum(downward_action_messages[k] * upward_action_messages[k])
 
-            current_free_energy = self.free_energy(rightward_state_messages, upward_state_messages, downward_action_messages, upward_action_messages, leftward_state_messages)
-            print(current_free_energy)
+            result = self.free_energy()
+            current_free_energy = result[0]
 
 
     def act(self, action = None):
@@ -196,20 +168,24 @@ class Agent:
             current_action_belief = self.action_beliefs[self.current_action_timestep]
             number_actions = len(current_action_belief)
             action = np.random.choice(number_actions, p=current_action_belief)
-        #self.action_beliefs[self.current_action_timestep, :] = 0
-        #self.action_beliefs[self.current_action_timestep, action] = 1
         self.current_action_timestep += 1
         return action
     
 
     def print_beliefs(self):
-        for k in range(self.time_horizon):
-            print('Timestep ' + str(k))
-            if k == self.time_horizon - 1:
-                print('q(s) = ' + str(self.state_beliefs[k]))
-                print('q(o) = ' + str(self.observation_beliefs[k]))
-            else:
-                print('q(s) = ' + str(self.state_beliefs[k]))
-                print('q(o) = ' + str(self.observation_beliefs[k]))
-                print('q(u) = ' + str(self.action_beliefs[k]))
-            print()
+        print('Beliefs (t=0):')
+        print('q(s_0) = ' + str(self.state_beliefs[0]))
+        print('q(o_0) = ' + str(self.observation_beliefs[0]))
+        print('q(u_0) = ' + str(self.action_beliefs[0])) 
+        print()
+
+        print('Beliefs (t=1):')
+        print('q(s_1) = ' + str(self.state_beliefs[1]))
+        print('q(o_1) = ' + str(self.observation_beliefs[1]))
+        print('q(u_1) = ' + str(self.action_beliefs[1])) 
+        print()
+
+        print('Beliefs (t=2):')
+        print('q(s_2) = ' + str(self.state_beliefs[2]))
+        print('q(o_2) = ' + str(self.observation_beliefs[2]))
+        print()
