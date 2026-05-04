@@ -1,5 +1,5 @@
 import numpy as np
-from src.math_utils import softmax
+from utils import softmax
 
 
 class GenerativeModel:

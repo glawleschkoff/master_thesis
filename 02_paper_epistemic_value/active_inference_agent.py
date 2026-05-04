@@ -1,5 +1,5 @@
 import numpy as np
-from src.math_utils import softmax, safelog
+from utils import softmax, safelog
 
 
 class ActiveInferenceAgent:
