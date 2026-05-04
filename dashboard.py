@@ -587,7 +587,7 @@ with col_controls:
         st.plotly_chart(fig_total, use_container_width=True, config={'displayModeBar': False})
         
         # Optionale Text-Zusammenfassung für den schnellen Check
-        st.caption(f"Aktuelle Optimierung: **F = {f_total:.4f}**")
+        st.caption(f"**F = {f_total:.4f}**")
 
 with col_graph:
     cffg = create_cffg_blueprint()
